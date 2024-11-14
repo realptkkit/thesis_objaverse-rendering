@@ -37,16 +37,16 @@ def worker(
     s3: Optional[boto3.client],
 ) -> None:
     while True:
-        item = queue.get()
-        if item is None:
+        input_file, output_dir = queue.get()
+        if input_file is None:
             break
 
         # Perform some operation on the item
-        print(item, gpu)
+        print(input_file, gpu)
         command = (
             f"export DISPLAY=:0.{gpu} &&"
             f" blender -b -P scripts/blender_script.py --"
-            f" --object_path {item}"
+            f" --object_path {input_file} --output_dir {output_dir}"
         )
         subprocess.run(command, shell=True)
 
@@ -89,6 +89,8 @@ if __name__ == "__main__":
     # Add items to the queue
     with open(args.input_models_path, "r") as f:
         model_paths = json.load(f)
+
+    model_paths = model_paths[:10]
     for item in model_paths:
         queue.put(item)
 
